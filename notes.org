@@ -1,0 +1,19 @@
+#+title: Project Notes
+
+* Notes
+
+- Downloaded HyperLeda database using query:
+  
+#+begin_src sql :exports code
+SELECT pgc,objname,al2000,de2000,pa,v,incl,modz FROM metadata WHERE objtype='G'
+#+end_src
+
+- Downloaded EGIS binary FITS table with unlimited count, decimal angles, and columns:
+  - name, band, RAJ2000, DEJ2000, PA, h, e_h, z0, e_z0, S0, e_S0, gradz0, mag, B/T, Type, RV, AName, NED
+- Angular distance given by \( \theta = \arccos{\left[ \sin{\delta_{A}}\sin{\delta_{B}} + \cos{\delta_{A}}\cos{\delta_{B}} \cos{\left( \alpha_{A} - \alpha_{B} \right)} \right]} \)
+- Estimated surface density
+- To convert from \( DL_{Mpc} \) to \( DA_{Mpc} \):
+  - \( DA_{Mpc} = \dfrac{DL_{Mpc}}{\left( 1 + z \right)^2} \)
+- To convert \( modz \):
+  - \( DL_{Mpc} = 10^{\left( modz/5 - 5 \right)} \)
+- Calculated a distance of \( \SI{29.155}{Mpc} \) for UGC 4599

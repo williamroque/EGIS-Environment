@@ -10,6 +10,14 @@ def get_nearby_galaxies(args):
     with Data(args.egis_path, args.leda_path) as data:
         data.set_log(args.verbose, args.log_path)
 
+        data.log(f"""Started running `radius` command with parameters:
+  - Galaxy:          {args.galaxy}
+  - Radius:          {args.search_radius}
+  - Distance:        {args.search_distance}
+  - NED:             {args.ned}
+  - Leda:            {args.leda}
+  - Angular search:  {args.angular_search}""")
+
         galaxies = data.nearby_galaxies(
             args.galaxy,
             args.search_radius,
@@ -18,15 +26,6 @@ def get_nearby_galaxies(args):
             args.leda,
             args.angular_search
         )
-
-        data.log(f"""Started running `radius` command with parameters:
-  - Galaxy:          {args.galaxy}\n
-  - Radius:          {args.search_radius}\n
-  - Distance:        {args.search_distance}\n
-  - NED:             {args.ned}\n
-  - Leda:            {args.leda}\n
-  - Angular search:  {args.angular_search}
-        """)
 
         results = None
 
@@ -51,5 +50,6 @@ def get_nearby_galaxies(args):
         if isinstance(results, Table):
             if args.output_path:
                 results.write(args.output_path, overwrite=True)
+                data.log(f'Wrote results to {args.output_path}.')
             else:
-                print(results)
+                data.log(f'Results:\n {results}')

@@ -1,6 +1,6 @@
 import re
 
-ROWS = 10
+ROWS = 2000
 
 with open('../data/hyperleda.tsv', 'r') as fr:
     with open('../data/hyperleda_reduced.tsv', 'w') as fw:

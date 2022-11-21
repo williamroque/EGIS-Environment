@@ -59,13 +59,13 @@ class Data:
 
 
     def __exit__(self, exc_type, exc_value, exc_tb):
+        self.log('Closing Data instance.')
+
         if self.egis_hdul is not None:
             self.egis_hdul.close()
 
         if self.log_file is not None:
             self.log_file.close()
-
-        self.log('Closed Data instance.')
 
 
     def set_log(self, enabled, path):
@@ -82,7 +82,12 @@ class Data:
         self.log_path = path
 
         if path is not None:
-            self.log_file = open(path, 'w')
+            try:
+                self.log_file = open(path, 'w')
+            except FileNotFoundError:
+                self.log_path = None
+
+                self.log(f'Path invalid: {path}; will switch to printing mode.')
 
 
     def log(self, message):
@@ -205,6 +210,22 @@ class Data:
         return DA
 
 
+    def redshift_to_distance(self, z):
+        """
+        Wrapper for `redshift_to_distance`.
+
+        Parameters
+        ----------
+        - z: float -> redshift
+        """
+
+        distance = redshift_to_distance(z)
+
+        self.log(f'Got size distance of {distance}.')
+
+        return distance
+
+
     def nearby_galaxies(self, galaxy, radius, distance, ned=True, leda=True, angular_search=False):
         """
         Find all galaxies within a cylindrical angular radius and distance.
@@ -233,9 +254,11 @@ class Data:
 
         self.log(f'Got position {object_position[0][0]} (DEC), {object_position[1][0]} (RA) from NED database.')
 
-        object_distance = redshift_to_distance(
-            ned_object['Redshift'][0]
-        )
+        object_redshift = ned_object['Redshift'][0]
+
+        self.log(f'Got object redshift {object_redshift} from NED database.')
+
+        object_distance = self.redshift_to_distance(object_redshift)
 
         self.log(f'Got object distance {object_distance} from NED database.')
 
@@ -247,13 +270,13 @@ class Data:
 
             ned_table = Ned.query_region(galaxy, radius=radius * u.arcsec)
 
-            angular_size_distance = np.vectorize(redshift_to_distance)
+            angular_size_distance = np.vectorize(self.redshift_to_distance)
 
             ned_table = ned_table[np.abs(
                 angular_size_distance(
                     ned_table['Redshift']
                 ) - object_distance
-            ) < 1]
+            ) < distance]
 
             tables['ned'] = ned_table
 
@@ -262,22 +285,30 @@ class Data:
         if leda and self.leda_path is not None:
             self.log(f'Started getting nearby galaxies from HyperLeda database.')
 
-            leda_ra = self.leda_data['al2000']
-            leda_dec = self.leda_data['de2000']
+            leda_data = self.leda_data.copy()
 
-            modz = self.leda_data['modz']
-            cz = self.leda_data['v']
+            modz = leda_data['modz'].filled(np.nan)
+            leda_data = leda_data[~np.isnan(modz)]
+
+            cz = leda_data['v'].filled(np.nan)
+            leda_data = leda_data[~np.isnan(cz)]
+
+            modz = leda_data['modz']
+            cz = leda_data['v']
+
+            leda_ra = leda_data['al2000']
+            leda_dec = leda_data['de2000']
 
             angular_distance = np.vectorize(self.angular_distance)
             angular_size_distance = np.vectorize(self.angular_size_distance)
 
-            leda_table = self.leda_data[angular_distance(
+            leda_table = leda_data[angular_distance(
                 *object_position,
                 leda_dec, leda_ra,
                 'degree', 'hms'
             ) < radius]
 
-            leda_table = self.leda_data[np.abs(
+            leda_table = leda_data[np.abs(
                 angular_size_distance(
                     modz,
                     cz

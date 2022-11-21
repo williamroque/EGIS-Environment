@@ -5,6 +5,7 @@ environment of EGIS galaxies."""
 
 
 import argparse
+import sys
 
 from gentle.utility import get_nearby_galaxies
 
@@ -103,7 +104,11 @@ def main():
     )
     
     args = parser.parse_args()
-    args.func(args)
+
+    if 'func' in args:
+        args.func(args)
+    else:
+        parser.print_help(sys.stderr)
 
 
 if __name__ == '__main__':

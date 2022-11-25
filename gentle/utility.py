@@ -1,5 +1,7 @@
 from astropy.table import Table, hstack
+
 from gentle.data import Data
+from gentle.redshift import redshift_to_distance
 
 
 def get_nearby_galaxies(args):
@@ -53,3 +55,59 @@ def get_nearby_galaxies(args):
                 data.log(f'Wrote results to {args.output_path}.')
             else:
                 data.log(f'Results:\n {results}')
+
+
+def search_galaxy(args):
+    """
+    Interactive entry point to search for specific galaxies.
+    """
+
+    with Data(args.egis_path, args.leda_path) as data:
+        data.set_log(args.verbose, args.log_path)
+
+        data.log(f"""Started running `search` command with parameters:
+  - Galaxy:  {args.galaxy}
+  - NED:     {args.ned}
+  - Leda:    {args.leda}""")
+
+        results = data.search_galaxy(args.galaxy, args.ned, args.leda, args.field)
+
+        data.log(f"""Results:
+NED
+---
+{results['ned']}
+HyperLeda
+---------
+{results['leda']}""")
+
+
+def convert_redshift(args):
+    """
+    Interactive entry point to convert redshift to distance.
+    """
+
+    with Data(None, None) as data:
+        data.set_log(args.verbose, args.log_path)
+
+        data.log(f"""Started running `redshift` command with parameters:
+  - z:  {args.z}""")
+
+        distance = redshift_to_distance(args.z)
+
+        data.log(f'Results:\n {distance}')
+
+
+def convert_size_distance(args):
+    """
+    Interactive entry point to convert `v` to distance.
+    """
+
+    with Data(None, None) as data:
+        data.set_log(args.verbose, args.log_path)
+
+        data.log(f"""Started running `DA` command with parameters:
+  - v:     {args.v} """)
+
+        distance = data.angular_size_distance(args.v)
+
+        data.log(f'Results:\n {distance}')

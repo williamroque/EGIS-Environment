@@ -110,4 +110,4 @@ def redshift_to_distance(z):
         VCM = ratio*DCMR*DCMR*DCMR/3.
         V_Gpc = 4.*pi*((0.001*c/H0)**3)*VCM
 
-    return DA_Mpc
+    return DA_Mpc # should be DA instead, but here we are

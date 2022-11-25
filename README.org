@@ -18,3 +18,5 @@ SELECT pgc,objname,al2000,de2000,v,modz FROM meandata WHERE objtype='G'
   - \( DL_{Mpc} = 10^{\left( modz/5 - 5 \right)} \)
 - Calculated a distance of 29.155 Mpc for UGC 4599
 - Timeout increased in astropy configuration
+- Using luminosity distance instead makes it slightly closer to \( v = H_{0} d \)
+- Using \( H_{0} = 67.8 \), apparently used by NED

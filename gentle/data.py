@@ -189,25 +189,20 @@ class Data:
         return theta
 
 
-    def angular_size_distance(self, modz, cz):
+    def angular_size_distance(self, cz):
         """
-        Convert from modz and cz to angular size distance (Mpc).
+        Convert from cz to angular size distance (Mpc).
 
         Parameters
         ----------
-        - modz: float -> distance modulus (mag)
         - cz: float -> heliocentric radial velocity (km/s)
         """
 
-        z = cz/c
-        az = 1/(1 + z)
+        D = cz/H0
 
-        DL = 10**(modz/5 - 5)
-        DA = az*az*DL
+        self.log(f'Got size distance of {D}.')
 
-        self.log(f'Got size distance of {DA}.')
-
-        return DA
+        return D
 
 
     def redshift_to_distance(self, z):
@@ -224,6 +219,44 @@ class Data:
         self.log(f'Got size distance of {distance}.')
 
         return distance
+
+
+    def search_galaxy(self, galaxy, ned=True, leda=True, field=None):
+        """
+        Find a target galaxy in the NED and HyperLeda databases.
+
+        Paramters
+        ---------
+        - galaxy: str -> the galaxy name
+        - field: str -> the field to extract
+        """
+
+        tables = {
+            'ned': None,
+            'leda': None
+        }
+
+        if ned:
+            obj = Ned.query_object(galaxy)
+
+            if field is not None and field in obj.colnames:
+                obj = obj[field]
+
+            tables['ned'] = obj
+
+            self.log('Got object from NED database.')
+
+        if leda and self.leda_data is not None:
+            obj = self.leda_data[self.leda_data['objname'] == galaxy]
+
+            if field is not None and field in obj.colnames:
+                obj = obj[field]
+
+            tables['leda'] = obj
+
+            self.log('Got object from HyperLeda database.')
+
+        return tables
 
 
     def nearby_galaxies(self, galaxy, radius, distance, ned=True, leda=True, angular_search=False):
@@ -254,16 +287,16 @@ class Data:
 
         self.log(f'Got position {object_position[0][0]} (DEC), {object_position[1][0]} (RA) from NED database.')
 
-        object_redshift = ned_object['Redshift'][0]
+        object_velocity = ned_object['Velocity'][0]
 
-        self.log(f'Got object redshift {object_redshift} from NED database.')
+        self.log(f'Got object velocity {object_velocity} from NED database.')
 
-        object_distance = self.redshift_to_distance(object_redshift)
-
-        self.log(f'Got object distance {object_distance} from NED database.')
+        object_distance = self.angular_size_distance(object_velocity)
 
         if not angular_search:
             radius = 206265 * radius/object_distance
+
+            self.log(f'Switched to search angle {radius} arcsec.')
 
         if ned:
             self.log(f'Started getting nearby galaxies from NED database.')
@@ -286,34 +319,34 @@ class Data:
             self.log(f'Started getting nearby galaxies from HyperLeda database.')
 
             leda_data = self.leda_data.copy()
+            leda_table = leda_data.copy()
+            leda_table.remove_rows(slice(0, len(leda_table)))
 
-            modz = leda_data['modz'].filled(np.nan)
-            leda_data = leda_data[~np.isnan(modz)]
+            leda_data['v'] = leda_data['v'].filled(np.nan)
 
-            cz = leda_data['v'].filled(np.nan)
-            leda_data = leda_data[~np.isnan(cz)]
+            for galaxy in leda_data:
+                cz = galaxy['v']
 
-            modz = leda_data['modz']
-            cz = leda_data['v']
+                if np.isnan(cz):
+                    continue
 
-            leda_ra = leda_data['al2000']
-            leda_dec = leda_data['de2000']
+                angular_distance = np.abs(self.angular_distance(
+                    object_position[0][0],
+                    object_position[1][0],
+                    galaxy['de2000'],
+                    galaxy['al2000'],
+                    'degree', 'hms'
+                ))
 
-            angular_distance = np.vectorize(self.angular_distance)
-            angular_size_distance = np.vectorize(self.angular_size_distance)
+                if angular_distance > radius:
+                    continue
 
-            leda_table = leda_data[angular_distance(
-                *object_position,
-                leda_dec, leda_ra,
-                'degree', 'hms'
-            ) < radius]
+                size_distance = np.abs(self.angular_size_distance(cz) - object_distance)
 
-            leda_table = leda_data[np.abs(
-                angular_size_distance(
-                    modz,
-                    cz
-                ) - object_distance
-            ) < distance]
+                if size_distance > distance:
+                    continue
+
+                leda_table.add_row(galaxy)
 
             if len(leda_table) > 0:
                 tables['leda'] = leda_table

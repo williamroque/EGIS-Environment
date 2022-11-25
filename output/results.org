@@ -1,0 +1,31 @@
+* Observations
+
+- Using \( H_{0} = 67.8 \), apparently used by NED
+- Used radius of 6795.3 arcsec for HyperLeda data, but 60 arcmin for NED (maximum allowed)
+  - Tried using astroquery, which timed out → tried increasing timeout in astroquery config, but server stops sending data anyways
+- Found nearby objects in cone in HyperLeda by constraining redshift and finding angular distance through
+\begin{alignat*}{3}
+\theta = \arccos{\left[ \sin{\delta_{A}}\sin{\delta_{B}} + \cos{\delta_{A}}\cos{\delta_{B}} \cos{\left( \alpha_{A} - \alpha_{B} \right)} \right]} 
+\end{alignat*}
+- Downloaded HyperLeda database using query:
+  
+#+begin_src sql :exports code
+SELECT pgc,objname,al2000,de2000,v,modz FROM meandata WHERE objtype='G'
+#+end_src
+
+* Results
+
+HyperLeda
+- [[https://ned.ipac.caltech.edu/byname?objname=SDSSJ084232.62%2B141717.7&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][SDSSJ084232.62+141717.7]]
+- [[https://ned.ipac.caltech.edu/byname?objname=UGC04550&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][UGC04550]]
+- [[https://ned.ipac.caltech.edu/byname?objname=PGC024469&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][PGC024469]]
+- [[https://ned.ipac.caltech.edu/byname?objname=NGC2648&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][NGC2648]]
+- [[https://ned.ipac.caltech.edu/byname?objname=SDSSJ084226.86%2B142533.3&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][SDSSJ084226.86+142533.3]]
+
+NED
+- [[https://ned.ipac.caltech.edu/byname?objname=WISEA+J084744.57%2B132528.7&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][WISEA J084744.57+132528.7]]
+- [[https://ned.ipac.caltech.edu/byname?objname=SDSS+J084744.77%2B132448.7&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][SDSS J084744.77+132448.7]]
+- [[https://ned.ipac.caltech.edu/byname?objname=HaDots+106&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][HaDots 106]]
+- [[https://ned.ipac.caltech.edu/byname?objname=SDSS+J084744.18%2B132604.7&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][SDSS J084744.18+132604.7]]
+- [[https://ned.ipac.caltech.edu/byname?objname=UZC-CG+079&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][UZC-CG 079]]
+- [[https://ned.ipac.caltech.edu/byname?objname=USGC+U191&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1][USGC U191]]
